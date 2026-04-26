@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(curl -s -X POST -H 'Content-Type: application/json' -d '{\"email\":\"__TRACKED_VAR__\",\"source\":\"smoke-test\"}' -w '\\\\nstatus=%{http_code}\\\\n' http://localhost:3000/api/waitlist)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"not-an-email\"}' -w \"\\\\nstatus=%{http_code}\\\\n\" http://localhost:3000/api/waitlist)",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\({deps: p.dependencies}, null, 2\\)\\);\")",
+      "Bash(node *)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d '{\"messages\":[{\"id\":\"u1\",\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"text\":\"Привет\"}]}],\"type\":\"product_sense\"}' -w \"\\\\nstatus=%{http_code}\\\\n\" http://localhost:3000/api/interview/chat)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" http://localhost:3000/interview/new)",
+      "Bash(curl -s -N -X POST -H 'Content-Type: application/json' -d '{ *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__e29075dc._.css)",
+      "Bash(curl -s -o /dev/null -w \"/dashboard \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/dashboard)",
+      "Bash(curl -s -o /dev/null -w \"/api/interviews \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/api/interviews)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d '{\"type\":\"product_sense\"}' -w \"POST /api/interviews \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/api/interviews -o /dev/null)",
+      "Bash(curl -s -o /dev/null -w \"/jobs \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/jobs)",
+      "Bash(curl -s -o /dev/null -w \"/jobs/new \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/jobs/new)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d '{\"raw_text\":\"Senior Product Manager at Yandex.Market — we are looking for an experienced PM...\"}' -w \"POST /api/jobs \\(no auth\\) → %{http_code}\\\\n\" http://localhost:3000/api/jobs -o /dev/null)",
+      "Bash(curl -s -X POST -H \"Content-Type: application/json\" -d '{\"raw_text\":\"too short\"}' -o /dev/null -w \"POST /api/jobs \\(short text\\) → %{http_code}\\\\n\" http://localhost:3000/api/jobs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/resumes/x)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/api/profile)",
+      "Bash(curl -s -o /dev/null -X POST -H \"Content-Type: application/json\" -d '{\"jobId\":\"x\"}' -w \"%{http_code}\\\\n\" http://localhost:3000/api/resumes)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/profile)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/resumes/x)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3001/api/profile)",
+      "Bash(curl -s -o /dev/null -X POST -H \"Content-Type: application/json\" -d '{\"jobId\":\"x\"}' -w \"%{http_code}\\\\n\" http://localhost:3001/api/resumes)"
+    ]
+  }
+}
