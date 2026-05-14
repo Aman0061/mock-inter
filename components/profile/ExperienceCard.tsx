@@ -25,7 +25,10 @@ export function ExperienceCard({
 
   function addBullet() {
     onChange({
-      bullets: [...experience.bullets, { id: makeBulletId(), text: "" }],
+      bullets: [
+        ...experience.bullets,
+        { id: makeBulletId(), raw_input: "", text: "", metric: "" },
+      ],
     });
   }
 
@@ -103,9 +106,12 @@ export function ExperienceCard({
                 {String(i + 1).padStart(2, "0")}
               </span>
               <textarea
-                value={bullet.text}
+                value={bullet.raw_input || bullet.text}
                 onChange={(e) =>
-                  updateBullet(bullet.id, { text: e.target.value })
+                  updateBullet(bullet.id, {
+                    raw_input: e.target.value,
+                    text: e.target.value,
+                  })
                 }
                 rows={2}
                 placeholder="Запустил фичу X для Y, что подняло метрику Z на N%"

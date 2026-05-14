@@ -2,8 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { ArrowRight, Briefcase } from "lucide-react";
-import { GapReport } from "@/components/resumes/GapReport";
-import { ResumeView } from "@/components/resumes/ResumeView";
+import { ResumeWorkspace } from "@/components/resumes/ResumeWorkspace";
 import { buttonClassName } from "@/components/ui/Button";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 import type {
@@ -111,9 +110,11 @@ export default async function ResumePage({
         </div>
       </header>
 
-      <ResumeView resume={resume.resume} />
-
-      <GapReport report={resume.gap_report} />
+      <ResumeWorkspace
+        resumeId={resume.id}
+        initialResume={resume.resume}
+        gapReport={resume.gap_report}
+      />
 
       <section className="mt-14">
         <div className="flex flex-col items-stretch gap-4 rounded-3xl border border-border bg-accent-soft p-7 sm:flex-row sm:items-center sm:justify-between sm:p-9">

@@ -34,6 +34,11 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Local credential files (never commit)
+*-service-account*.json
+google-credentials.json
+credentials.json
+
 # vercel
 .vercel
 

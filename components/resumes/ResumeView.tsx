@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, Info } from "lucide-react";
+import { Eye, EyeOff, Info, Target } from "lucide-react";
 import type { Resume, ResumeBullet } from "@/lib/ai/resume";
 
 const PROVENANCE_META: Record<
@@ -28,6 +28,8 @@ const PROVENANCE_META: Record<
 
 export function ResumeView({ resume }: { resume: Resume }) {
   const [honestMode, setHonestMode] = useState(false);
+  const alignment = resume.alignment;
+  const knowledge = resume.knowledge ?? [];
 
   return (
     <section className="mt-12">
@@ -73,6 +75,41 @@ export function ResumeView({ resume }: { resume: Resume }) {
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
               {resume.summary}
             </p>
+          )}
+
+          {alignment && (
+            <div className="mt-6 rounded-2xl border border-primary/20 bg-accent-soft px-4 py-4">
+              <div className="flex items-start gap-3">
+                <Target
+                  className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                  strokeWidth={1.75}
+                />
+                <div className="flex-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">
+                    Адаптация под вакансию
+                  </p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <AlignmentMetric
+                      label="Роль"
+                      value={alignment.target_role || resume.target_role}
+                    />
+                    <AlignmentMetric
+                      label="Fit"
+                      value={`${Math.round(alignment.fit_score)}%`}
+                    />
+                    <AlignmentMetric
+                      label="Натяжка"
+                      value={`${Math.round(alignment.stretch_ratio)}%`}
+                    />
+                  </div>
+                  {alignment.honesty_note && (
+                    <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                      {alignment.honesty_note}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
         </header>
 
@@ -127,6 +164,22 @@ export function ResumeView({ resume }: { resume: Resume }) {
           </section>
         )}
 
+        {knowledge.length > 0 && (
+          <section className="mt-10">
+            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">
+              Знания под вакансию
+            </p>
+            <ul className="mt-4 grid gap-2 text-sm leading-relaxed text-foreground sm:grid-cols-2">
+              {knowledge.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Empty resume warning */}
         {resume.experience.length === 0 && (
           <div className="mt-6 rounded-2xl border border-danger/30 bg-danger/10 px-5 py-4 text-sm text-foreground">
@@ -148,6 +201,23 @@ export function ResumeView({ resume }: { resume: Resume }) {
         )}
       </article>
     </section>
+  );
+}
+
+function AlignmentMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/80 bg-background/60 px-3 py-2">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
+    </div>
   );
 }
 

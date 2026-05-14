@@ -1,19 +1,48 @@
 import { auth } from "@clerk/nextjs/server";
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { generateObject } from "ai";
+import { NoObjectGeneratedError, generateObject } from "ai";
 import { getInterviewerModel, isOpenAIConfigured } from "@/lib/ai/model";
 import {
   RESUME_SYSTEM_PROMPT,
   buildResumeUserPrompt,
+  enforceResumeTruthBudget,
   tailoredOutputSchema,
+  type TailoredOutput,
 } from "@/lib/ai/resume";
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
-import { isProfileFilled, type Profile } from "@/types/profile";
+import { isProfileFilled, normalizeProfile } from "@/types/profile";
 
 export const maxDuration = 60;
 
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
+type DbError = {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+};
+
+function toDeterministicUuid(userId: string): string {
+  const digest = createHash("sha256").update(`mockbuddy:${userId}`).digest("hex");
+  const hex = digest.slice(0, 32);
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
+}
+
+function isInvalidUuidError(error: DbError | null | undefined): boolean {
+  if (!error) return false;
+  return (
+    error.code === "22P02" ||
+    error.message.toLowerCase().includes("invalid input syntax for type uuid")
+  );
+}
+
+function buildUserCandidates(userId: string): string[] {
+  const uuidFallback = toDeterministicUuid(userId);
+  return uuidFallback === userId ? [userId] : [userId, uuidFallback];
 }
 
 export async function POST(req: Request) {
@@ -40,18 +69,41 @@ export async function POST(req: Request) {
   const supabase = getSupabaseAdmin();
 
   // Load profile
-  const { data: profileRow, error: profileError } = await supabase
-    .from("profiles")
-    .select("data")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (profileError) {
-    console.error("[resumes:profile-load]", profileError);
-    return NextResponse.json({ error: profileError.message }, { status: 500 });
+  let rawProfile: unknown = null;
+  let profileLoadError: DbError | null = null;
+
+  for (const candidate of buildUserCandidates(userId)) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("data")
+      .eq("user_id", candidate)
+      .maybeSingle();
+
+    if (!error) {
+      rawProfile = data?.data ?? null;
+      profileLoadError = null;
+      break;
+    }
+
+    if (isInvalidUuidError(error) && candidate === userId) {
+      profileLoadError = error;
+      continue;
+    }
+
+    profileLoadError = error;
+    break;
   }
 
-  const profile = profileRow?.data as Profile | undefined;
-  if (!isProfileFilled(profile ?? null)) {
+  if (profileLoadError) {
+    console.error("[resumes:profile-load]", profileLoadError);
+    return NextResponse.json(
+      { error: profileLoadError.message },
+      { status: 500 }
+    );
+  }
+
+  const profile = normalizeProfile(rawProfile);
+  if (!isProfileFilled(profile)) {
     return NextResponse.json(
       {
         error:
@@ -81,7 +133,7 @@ export async function POST(req: Request) {
   }
 
   // Generate
-  let output;
+  let output: TailoredOutput;
   try {
     const result = await generateObject({
       model: getInterviewerModel(),
@@ -92,13 +144,24 @@ export async function POST(req: Request) {
         jobAnalysis: jobRow.analysis,
       }),
     });
-    output = result.object;
+    output = enforceResumeTruthBudget(result.object);
   } catch (err) {
     console.error("[resumes:generate]", err);
+    if (NoObjectGeneratedError.isInstance(err)) {
+      console.error("[resumes:generate:no-object]", {
+        finishReason: err.finishReason,
+        cause: err.cause,
+        text: err.text?.slice(0, 2000),
+      });
+    }
     return NextResponse.json(
       {
-        error:
-          "AI не смог собрать резюме. Возможно, профиль слишком короткий — добавь больше опыта и попробуй ещё раз.",
+        error: NoObjectGeneratedError.isInstance(err)
+          ? "AI вернул резюме не в том формате. Я уже ослабил схему — попробуй ещё раз."
+          : "AI не смог собрать резюме. Попробуй ещё раз, а если повторится — пришли текст ошибки.",
+        code: NoObjectGeneratedError.isInstance(err)
+          ? "ai_schema_error"
+          : "ai_generation_error",
       },
       { status: 500 }
     );

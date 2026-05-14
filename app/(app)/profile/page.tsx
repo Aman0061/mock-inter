@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function ProfilePage() {
   return (
-    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+    <div className="mx-auto w-full max-w-7xl px-5 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
       <header className="border-b border-border pb-10">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted">
           Профиль
