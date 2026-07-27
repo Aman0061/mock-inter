@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { NoObjectGeneratedError, generateObject } from "ai";
 import { getInterviewerModel, isOpenAIConfigured } from "@/lib/ai/model";
@@ -17,32 +16,6 @@ export const maxDuration = 60;
 
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
-
-type DbError = {
-  message: string;
-  details?: string;
-  hint?: string;
-  code?: string;
-};
-
-function toDeterministicUuid(userId: string): string {
-  const digest = createHash("sha256").update(`mockbuddy:${userId}`).digest("hex");
-  const hex = digest.slice(0, 32);
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
-}
-
-function isInvalidUuidError(error: DbError | null | undefined): boolean {
-  if (!error) return false;
-  return (
-    error.code === "22P02" ||
-    error.message.toLowerCase().includes("invalid input syntax for type uuid")
-  );
-}
-
-function buildUserCandidates(userId: string): string[] {
-  const uuidFallback = toDeterministicUuid(userId);
-  return uuidFallback === userId ? [userId] : [userId, uuidFallback];
 }
 
 export async function POST(req: Request) {
@@ -69,30 +42,11 @@ export async function POST(req: Request) {
   const supabase = getSupabaseAdmin();
 
   // Load profile
-  let rawProfile: unknown = null;
-  let profileLoadError: DbError | null = null;
-
-  for (const candidate of buildUserCandidates(userId)) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("data")
-      .eq("user_id", candidate)
-      .maybeSingle();
-
-    if (!error) {
-      rawProfile = data?.data ?? null;
-      profileLoadError = null;
-      break;
-    }
-
-    if (isInvalidUuidError(error) && candidate === userId) {
-      profileLoadError = error;
-      continue;
-    }
-
-    profileLoadError = error;
-    break;
-  }
+  const { data: profileRow, error: profileLoadError } = await supabase
+    .from("profiles")
+    .select("data")
+    .eq("user_id", userId)
+    .maybeSingle();
 
   if (profileLoadError) {
     console.error("[resumes:profile-load]", profileLoadError);
@@ -102,7 +56,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const profile = normalizeProfile(rawProfile);
+  const profile = normalizeProfile(profileRow?.data ?? null);
   if (!isProfileFilled(profile)) {
     return NextResponse.json(
       {

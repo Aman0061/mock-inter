@@ -9,7 +9,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const VARIANT_CLASSES: Record<Variant, string> = {
   primary:
-    "bg-primary text-primary-foreground hover:bg-indigo-500 focus-visible:ring-primary/60",
+    "bg-primary text-primary-foreground hover:bg-[#FF8A5F] focus-visible:ring-primary/60",
   secondary:
     "bg-white/5 text-foreground hover:bg-white/10 focus-visible:ring-white/30",
   ghost:

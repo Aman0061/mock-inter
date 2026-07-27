@@ -32,7 +32,7 @@ export default function LandingPage() {
       <section className="relative isolate overflow-hidden px-6 pt-16 pb-16 sm:pt-24 sm:pb-20 lg:pt-32">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),transparent_60%)]"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(255,107,53,0.18),transparent_60%)]"
         />
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
           <span className="mb-6 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-muted-foreground">
@@ -40,7 +40,7 @@ export default function LandingPage() {
           </span>
           <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             Готовься к собеседованию на PM так,{" "}
-            <span className="bg-gradient-to-r from-indigo-400 to-cyan-300 bg-clip-text text-transparent">
+            <span className="font-display italic text-primary">
               как будто это уже оффер
             </span>
           </h1>
@@ -74,7 +74,7 @@ export default function LandingPage() {
             </Show>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Без регистрации. Сохраним прогресс, если захочешь.
+            Быстрая регистрация. Прогресс сохраняется в твоём аккаунте.
           </p>
         </div>
       </section>

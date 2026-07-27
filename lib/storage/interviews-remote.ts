@@ -45,8 +45,6 @@ async function request<T>(
 }
 
 export const remoteInterviewStorage: InterviewStorage = {
-  isRemote: true,
-
   listSessions: async () => {
     const data = await request<{ interviews: ApiInterviewRow[] }>(
       "/api/interviews"

@@ -13,8 +13,6 @@ export type SessionMetaUpdate = Partial<{
 }>;
 
 export type InterviewStorage = {
-  isRemote: boolean;
-
   listSessions: () => Promise<InterviewSession[]>;
   getSession: (id: string) => Promise<InterviewSession | undefined>;
   createSession: (input: CreateSessionInput) => Promise<InterviewSession>;

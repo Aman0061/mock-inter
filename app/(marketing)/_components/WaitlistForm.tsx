@@ -44,7 +44,7 @@ export function WaitlistForm() {
 
   if (status === "success") {
     return (
-      <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+      <p className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
         {message}
       </p>
     );
@@ -72,7 +72,7 @@ export function WaitlistForm() {
         {status === "loading" ? "Отправляем..." : "В waitlist"}
       </Button>
       {status === "error" && (
-        <p className="basis-full text-sm text-red-400 sm:order-last">
+        <p className="basis-full text-sm text-danger sm:order-last">
           {message}
         </p>
       )}

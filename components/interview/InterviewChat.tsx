@@ -123,9 +123,18 @@ function ChatInner({
   });
 
   // Persist messages with debounce so we don't write on every streaming chunk.
+  // pendingSaveRef tracks the latest not-yet-flushed state so it can be
+  // saved immediately if the user navigates away before the debounce fires.
+  const pendingSaveRef = useRef<{
+    messages: UIMessage[];
+    feedback: string | null;
+  } | null>(null);
+
   useEffect(() => {
     if (messages.length === 0) return;
+    pendingSaveRef.current = { messages, feedback };
     const timeoutId = setTimeout(() => {
+      pendingSaveRef.current = null;
       storage.saveMessages(session.id, messages).catch((err) => {
         console.error("Failed to save messages", err);
       });
@@ -138,6 +147,24 @@ function ChatInner({
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [messages, feedback, session.id, storage]);
+
+  useEffect(() => {
+    return () => {
+      const pending = pendingSaveRef.current;
+      if (!pending) return;
+      storage.saveMessages(session.id, pending.messages).catch((err) => {
+        console.error("Failed to save messages", err);
+      });
+      storage
+        .updateSessionMeta(session.id, {
+          messageCount: pending.messages.length,
+          status: pending.feedback ? "completed" : "active",
+        })
+        .catch((err) => console.error("Failed to update session meta", err));
+    };
+    // Flush-on-unmount only — intentionally not re-subscribing per render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Autoscroll on new messages or while streaming.
   useEffect(() => {

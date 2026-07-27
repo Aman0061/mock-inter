@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { Download, Loader2, PenSquare, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { GapReport } from "@/components/resumes/GapReport";
@@ -13,6 +11,12 @@ import type {
   ResumeBullet,
   ResumeExperience,
 } from "@/lib/ai/resume";
+import {
+  applyStyles,
+  createTextElement,
+  renderNodeToPdf,
+  slugifyFilename,
+} from "@/lib/pdf-export";
 
 type Props = {
   resumeId: string;
@@ -43,30 +47,6 @@ function splitLines(value: string): string[] {
 
 function joinLines(values: string[]): string {
   return values.join("\n");
-}
-
-function slugifyFilename(value: string): string {
-  const base = value.trim().toLowerCase();
-  if (!base) return "resume";
-  return base
-    .replace(/[^a-z0-9а-яё]+/gi, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>) {
-  Object.assign(element.style, styles);
-}
-
-function createTextElement<K extends keyof HTMLElementTagNameMap>(
-  tagName: K,
-  text: string,
-  styles: Partial<CSSStyleDeclaration> = {}
-): HTMLElementTagNameMap[K] {
-  const element = document.createElement(tagName);
-  element.textContent = text;
-  applyStyles(element, styles);
-  return element;
 }
 
 function createExportResumeNode(resume: EditableResume): HTMLDivElement {
@@ -330,79 +310,14 @@ export function ResumeWorkspace({ resumeId, initialResume, gapReport }: Props) {
 
   async function downloadPdf() {
     setIsExporting(true);
-    let exportNode: HTMLDivElement | null = null;
     try {
-      exportNode = createExportResumeNode(resume);
-      applyStyles(exportNode, {
-        position: "fixed",
-        left: "-10000px",
-        top: "0",
-        zIndex: "-1",
-      });
-      document.body.appendChild(exportNode);
-
-      const canvas = await html2canvas(exportNode, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#13141A",
-        logging: false,
-        onclone: (clonedDocument) => {
-          clonedDocument
-            .querySelectorAll("style, link[rel='stylesheet']")
-            .forEach((node) => node.remove());
-        },
-      });
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 8;
-      const contentWidth = pageWidth - margin * 2;
-      const contentHeight = pageHeight - margin * 2;
-      const pxPerMm = canvas.width / contentWidth;
-      const pageHeightPx = Math.floor(contentHeight * pxPerMm);
-      let offsetY = 0;
-      let page = 0;
-
-      while (offsetY < canvas.height) {
-        const sliceHeightPx = Math.min(pageHeightPx, canvas.height - offsetY);
-        const pageCanvas = document.createElement("canvas");
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = sliceHeightPx;
-        const context = pageCanvas.getContext("2d");
-        if (!context) throw new Error("Не удалось подготовить PDF");
-        context.drawImage(
-          canvas,
-          0,
-          offsetY,
-          canvas.width,
-          sliceHeightPx,
-          0,
-          0,
-          canvas.width,
-          sliceHeightPx
-        );
-        if (page > 0) pdf.addPage();
-        pdf.addImage(
-          pageCanvas.toDataURL("image/png", 1),
-          "PNG",
-          margin,
-          margin,
-          contentWidth,
-          sliceHeightPx / pxPerMm,
-          undefined,
-          "FAST"
-        );
-        offsetY += sliceHeightPx;
-        page += 1;
-      }
-
-      pdf.save(`${slugifyFilename(resume.headline || resume.target_role)}-mockbuddy.pdf`);
+      const exportNode = createExportResumeNode(resume);
+      const filename = `${slugifyFilename(resume.headline || resume.target_role)}-mockbuddy`;
+      await renderNodeToPdf(exportNode, filename);
     } catch (error) {
       setSaveState("error");
       setMessage(error instanceof Error ? error.message : "Не удалось скачать PDF");
     } finally {
-      exportNode?.remove();
       setIsExporting(false);
     }
   }

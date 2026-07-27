@@ -61,9 +61,7 @@ export function InterviewList({ limit }: { limit?: number } = {}) {
           Здесь будет история твоих интервью.
         </p>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-          {storage.isRemote
-            ? "Запусти первое — оно появится тут со всеми ответами и фидбеком."
-            : "Сейчас она хранится локально на этом устройстве. Зарегистрируйся, чтобы синхронизировать с аккаунтом."}
+          Запусти первое — оно появится тут со всеми ответами и фидбеком.
         </p>
         {error && (
           <p className="mt-4 max-w-sm text-xs text-danger">{error}</p>
